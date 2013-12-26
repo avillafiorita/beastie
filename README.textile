@@ -1,0 +1,79 @@
+h1. Beastie
+
+A bare-bones command-line bug tracking system for personal or small projects which require little formality.
+
+h2. Installation
+
+Add this line to your application's Gemfile:
+
+<pre>
+  gem 'beastie'
+</pre>
+
+And then execute:
+
+<pre>
+  $ bundle
+</pre>
+
+Or install it yourself as:
+
+<pre>
+  $ gem install beastie
+</pre>
+
+h2. Usage
+
+Beastie is a bug tracking system at its bare essentials.
+
+Main commands:
+
+- @beastie new@ := asks information about an issue and generate a YAML file in the current directory.
+
+- @beastie list@ := reads all YAML files in the current directory and generate a list of all the issues.
+
+- @beastie show N@ := shows issue @N@, where @N@ is the identifier shown by the @beastie list@ command.
+
+- @beastie edit N@ := edits issue @N@.  The commands invokes the editor set in the shell @EDITOR@ variable or use @emacsclient@ if @EDITOR@ is unset.
+
+- @beastie help@ := unleashes the real power of @beastie@.
+
+h2. Limitations and Warnings
+
+Beastie uses the *current directory* for all operations.  While this gives a lot of flexibility and freedom in choosing one's standards, it also requires discipline: so, make sure you select one directory where issues are stored and always invoke @beastie@ from that directory.  
+
+Beastie tries to generate human-readable filenames, following the convention "Jekyll":http://jekyllrb.com has for blog posts.  Selecting issues using filenames, however, is a bit clumsy and to simplify operations @beastie@ assigns a number to each issue, which can be used to reference them.  The number can be seen with the @list@ command and depends upon the order in which issues are parsed.  Thus *the same issue might be assigned a different id over time*, if the order in which files are read changes (e.g., if a new back-dated issue is added by hand).
+
+Beastie does not have a specific workflow for bug statutes.
+
+Beastie does not perform syntax checks when reading data.  This can be changed by specifying appropriate input functions in the @ISSUE_FIELDS@ variable (@lib/beastie/issue.rb@).
+
+Beastie asks various information about a bug.  Change the @ISSUE_FIELDS@ variable, if you are not happy with the default fieldset.
+
+
+h2. Similar solutions
+
+There are different command-line bug tracking systems.  The ones I came across with before re-inventing the wheel include: ditz, "bugs everywhere":http://bugseverywhere.org, "ticgit-Ng":https://github.com/jeffWelling/ticgit, "bugzyrb":https://github.com/rkumar/bugzyrb, "git-issues":https://github.com/duplys/git-issues, "later":https://github.com/qznc/later.
+
+Why did I re-invent the wheel? 
+
+# for fun
+# human-readable filenames, so that I can manage issues without using beastie, if I want
+# a "programmable" fieldset (see @lib/beastie/issue.rb@)
+# keeping the solution simple
+
+h2. Author
+
+Adolfo Villafiorita
+
+h2. License
+
+"MIT":https://github.com/avillafiorita/beastie/blob/master/LICENSE.txt
+
+h2. Contributing
+
+1. Fork it
+2. Create your feature branch (`git checkout -b my-new-feature`)
+3. Commit your changes (`git commit -am 'Add some feature'`)
+4. Push to the branch (`git push origin my-new-feature`)
+5. Create new Pull Request
