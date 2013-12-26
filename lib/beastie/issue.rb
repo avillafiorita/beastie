@@ -124,8 +124,8 @@ module Beastie
    
     # read n-lines (terminated by a ".")
     def get_lines
-      $/ = "."  
-      STDIN.gets.chomp(".")
+      $/ = "\n.\n"  
+      STDIN.gets.chomp("\n.\n")
     end
     
     # read an integer
