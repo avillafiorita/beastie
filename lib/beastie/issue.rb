@@ -60,11 +60,11 @@ module Beastie
     # which fields go to the report and formatting options
     REPORT_FIELDS = {
       "status"   => "%-10s",
-      "type"     => "%-10s",
+      "type"     => "%-12s",
       "priority" => "%8s",
       "severity" => "%8s",
       "created"  => "%-10s",
-      "title"    => "%-32s"
+      "title"    => "%-30s"
     }
 
     # these keep the actual values
