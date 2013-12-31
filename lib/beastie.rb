@@ -55,7 +55,7 @@ module Beastie
         issue.save
 
       when "edit"
-        if args.size != 1 or not digits_only(args[0])
+        if args.size != 1 or not digits_only(args[0]) or args[0].to_i > Issue.count
           puts "beastie error: please specify an issue.\n\n"
           help
           exit 1
@@ -83,7 +83,7 @@ module Beastie
         system("#{editor} #{issue.filename}")
 
       when "show"
-        if args.size != 1 or not digits_only(args[0])
+        if args.size != 1 or not digits_only(args[0]) or args[0].to_i > Issue.count
           puts "beastie error: please specify an issue.\n"
           help
           exit 1
@@ -93,7 +93,7 @@ module Beastie
         system("cat #{Issue.filename issue_no}")
 
       when "change"
-        if args.size != 3 or not digits_only(args[0])
+        if args.size != 3 or not digits_only(args[0]) or args[0].to_i > Issue.count
           puts "beastie error: could not parse command line.\n"
           help
           exit 1
@@ -108,7 +108,7 @@ module Beastie
         issue.save
 
       when "close"
-        if args.size != 1 or not digits_only(args[0])
+        if args.size != 1 or not digits_only(args[0]) or args[0].to_i > Issue.count
           puts "beastie error: please specify an issue.\n"
           help
           exit 1

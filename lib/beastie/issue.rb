@@ -110,6 +110,12 @@ module Beastie
       Dir.glob('*.{yml,yaml}')[n - 1]
     end
 
+    # count all issues in current directory
+    # to get the maximum ID
+    def self.count
+      Dir.glob('*.{yml,yaml}').size
+    end
+
     # list all issues in current directory
     def self.list
       # print header
