@@ -23,27 +23,38 @@ module Beastie
     #
     # - for each field, the structure if the following:
     #
-    #           field name => init value, prompt
+    #           field name => input function, default value, prompt
     # 
     #   where 
-    #   * "init value" is evaluated (use "gets.chomp" to ask input)
-    #   * prompt is what is asked to the user.  Use an empty string for
-    #     a value which is filled automatically.
-    # 
+    #
+    #   * "input function" is a function to ask a value to the user. Use an empty
+    #                      string for a value which is filled automatically
+    #
+    #   * "default value"  is the default value to assign to the field
+    #
+    #   * "prompt"         is what is asked to the user.  Use an empty string for
+    #                      a value which is filled automatically.
+    #
+    # input function and default value are evaluated, so that computation can be performed
+    #
     # - title, created, and status are compulsory: do not delete them
     #   (gen_filename depends upon title and created; the close
     #   command depends upon status)
     #
+    INPUT_F=0
+    DEFAULT=1
+    PROMPT=2
+
     ISSUE_FIELDS = {
-      "title"       => ["gets.chomp", "Short description of the issue"], 
-      "status"      => ["'open'",     ""],
-      "created"     => ["Date.today", ""],
-      "component"   => ["gets.chomp", "Component affected by the issue"],
-      "priority"    => ["get_int", "Priority (an integer number, e.g., from 1 to 5)"],
-      "severity"    => ["get_int", "Severity (an integer number, e.g., from 1 to 5)"],
-      "points"      => ["get_int", "Points (an integer estimating the difficulty of the issue)"],
-      "type"        => ["gets.chomp", "Type (e.g., story, task, bug, refactoring)"],
-      "description" => ["get_lines",  "Longer description (terminate with '.')"]
+      "title"       => ["gets.chomp",  "'title'",    "Short description of the issue"], 
+      "status"      => ["",            "'open'",     ""],
+      "created"     => ["",            "Date.today", ""],
+      "component"   => ["gets.chomp",  "''",         "Component affected by the issue"],
+      "priority"    => ["get_int",     "3",          "Priority (an integer number, e.g., from 1 to 5)"],
+      "severity"    => ["get_int",     "3",          "Severity (an integer number, e.g., from 1 to 5)"],
+      "points"      => ["get_int",     "5",          "Points (an integer estimating difficulty of fix)"],
+      "type"        => ["gets.chomp",  "'bug'",      "Type (e.g., story, task, bug, refactoring)"],
+      "description" => ["get_lines",   "''",         "Longer description (terminate with '.')"]
     }
 
     # which fields go to the report and formatting options
@@ -61,13 +72,15 @@ module Beastie
     # the filename, after the issue has been saved or if it has been loaded
     attr_reader :filename
 
+    def initialize
+      @issue = Hash.new
+    end
+
     # interactively ask from command line all fields specified in ISSUE_FIELDS
     def ask
-      @issue = Hash.new
-
       ISSUE_FIELDS.keys.each do |key|
-        puts "#{ISSUE_FIELDS[key][1]}: " if ISSUE_FIELDS[key][1] != ""
-        @issue[key] = (eval ISSUE_FIELDS[key][0]) || ""
+        puts "#{ISSUE_FIELDS[key][PROMPT]}: " if ISSUE_FIELDS[key][PROMPT] != ""
+        @issue[key] = (eval ISSUE_FIELDS[key][INPUT_F]) || (eval ISSUE_FIELDS[key][DEFAULT])
       end
     end
     
@@ -118,6 +131,15 @@ module Beastie
         end
         printf "\n"
       end
+    end
+
+    # initialize all fields with the default values
+    # (and set title to the argument)
+    def set_fields title
+      ISSUE_FIELDS.keys.each do |k|
+        @issue[k] = eval(ISSUE_FIELDS[k][DEFAULT])
+      end
+      @issue['title'] = title
     end
 
     private 

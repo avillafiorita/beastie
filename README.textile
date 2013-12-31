@@ -30,6 +30,8 @@ Main commands:
 
 - @beastie new@ := asks information about an issue and generate a YAML file in the current directory.
 
+- @beastie nedit@ := enter a new issue using the default editor (@nedit@ = new and edit; see @edit@ for the specificaiton of the editor)
+
 - @beastie list@ := reads all YAML files in the current directory and generate a list of all the issues.
 
 - @beastie show N@ := shows issue @N@, where @N@ is the identifier shown by the @beastie list@ command.
