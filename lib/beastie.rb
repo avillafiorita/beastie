@@ -44,7 +44,7 @@ module Beastie
       case command
 
       when "new"
-        if args != nil 
+        if args.size != 0
           puts "beastie error: too many arguments."
           help
           exit 1
