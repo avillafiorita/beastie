@@ -45,7 +45,7 @@ module Beastie
 
       when "new"
         if args.size != 0
-          puts "beastie error: too many arguments."
+          puts "beastie error: too many arguments.\n"
           help
           exit 1
         end
@@ -55,8 +55,8 @@ module Beastie
         issue.save
 
       when "edit"
-        if args.size != 1
-          puts "beastie error: please specify an issue."
+        if args.size != 1 or not digits_only(args[0])
+          puts "beastie error: please specify an issue.\n\n"
           help
           exit 1
         end
@@ -69,7 +69,7 @@ module Beastie
       when "nedit"
         title = args.join(" ") # get all arguments (so that no " are necessary)
         if title == ""
-          puts "beastie error: please specify the issue title."
+          puts "beastie error: please specify the title of the issue.\n"
           help
           exit 1
         end
@@ -83,8 +83,8 @@ module Beastie
         system("#{editor} #{issue.filename}")
 
       when "show"
-        if args.size != 1
-          puts "beastie error: please specify an issue."
+        if args.size != 1 or not digits_only(args[0])
+          puts "beastie error: please specify an issue.\n"
           help
           exit 1
         end
@@ -93,8 +93,8 @@ module Beastie
         system("cat #{Issue.filename issue_no}")
 
       when "change"
-        if args.size != 3
-          puts "beastie error: could not parse command line."
+        if args.size != 3 or not digits_only(args[0])
+          puts "beastie error: could not parse command line.\n"
           help
           exit 1
         end
@@ -108,8 +108,8 @@ module Beastie
         issue.save
 
       when "close"
-        if args.size != 1
-          puts "beastie error: please specify an issue."
+        if args.size != 1 or not digits_only(args[0])
+          puts "beastie error: please specify an issue.\n"
           help
           exit 1
         end
@@ -153,5 +153,10 @@ module Beastie
       puts "  version         print version number"
     end
 
+    # check if str is composed by digits only
+    def self.digits_only str
+      str.each_char.map { |x| x >= '0' and x <= '9'}.all?
+    end
   end
+
 end
