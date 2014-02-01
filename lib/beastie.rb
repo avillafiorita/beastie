@@ -3,21 +3,15 @@ require 'optparse'
 
 require_relative "beastie/version"
 require_relative "beastie/issue"
+require_relative "beastie/project_list"
 
 module Beastie
 
-  # tell option parser to accept an existing directory
+  # add an option to optparser to accept an existing pathname as option
   OptionParser.accept(Pathname) do |pn|
     Pathname.new(pn) if pn
     raise OptionParser::InvalidArgument, pn if not Dir.exist?(pn)
   end
-
-  # Bestie manages issues from the command line.
-  # Each issue is a text file in YAML, whose name is Jekyll-post like: DATE-TITLE.yml
-  #
-  # Two simple commands
-  # - beastie new (create a new issue in the current directory
-  # - beastie list (list relevant firelds of issues stored in the current directory)
 
   class Runner
     # the editor to use with the edit command
@@ -25,19 +19,37 @@ module Beastie
     
     def self.run(args)
 
-      # options = {}
+      # default directory is ".", unless -p is specified
+      dir = "."
+      OptionParser.new do |opts|
+        opts.on("-p", "--project name", String,
+                "Use project's dir for operations") do |name|
+          dir = ProjectList.project_dir name
+          
+          if dir == nil then
+            puts "beastie error: nothing known about project #{name}.\n"
+            puts ""
+            puts "add the following lines to #{ProjectList::PROJECT_FILE}"
+            puts ""
+            puts "#{name}:"
+            puts "  dir: <directory where #{name} issues live>"
+            exit 1
+          end
+        end
 
-      # global_options = OptionParser.new do |opts|
-      #   opts.banner = "Usage: beastie [global options] <command> [[command options] <args>]"
-        
-      #   # Mandatory argument.
-      #   opts.on("-d", "--directory DIR", Pathname,
-      #           "Use DIR as the directory to store (and retrieve) issues") do |dir|
-      #     options[:dir] = dir
-      #   end
-      # end
+        opts.on("-d", "--directory name", String,
+                "Use this directory for operations") do |name|
+          dir = name
+        end
+      end.order!.parse!
 
-      # global_options.order!
+      if not Dir.exists?(dir)
+        puts "beastie error: the directory does not exist"
+        puts ""
+        puts "if you used -p, please check the #{ProjectList::PROJECT_FILE} file"
+        exit 1
+      end
+
       command = args[0]
       args.shift
 
@@ -50,50 +62,53 @@ module Beastie
           exit 1
         end
 
-        issue = Issue.new
+        issue = Issue.new dir
         issue.ask
         issue.save
-
-      when "edit"
-        if args.size != 1 or not digits_only(args[0]) or args[0].to_i > Issue.count
-          puts "beastie error: please specify an issue.\n\n"
-          help
-          exit 1
-        end
-
-        issue_no = args[0].to_i
-        shell_editor = `echo ${EDITOR}`.chomp
-        editor = shell_editor == "" ? EDITOR : shell_editor
-        system("#{editor} #{Issue.filename issue_no}")
+        puts "Issue saved to #{issue.full_filename}."
 
       when "nedit"
         title = args.join(" ") # get all arguments (so that no " are necessary)
+
         if title == ""
           puts "beastie error: please specify the title of the issue.\n"
           help
           exit 1
         end
 
-        issue = Issue.new
+        issue = Issue.new dir
         issue.set_fields title
         issue.save
+        system("#{editor_cmd} #{issue.full_filename}")
 
-        shell_editor = `echo ${EDITOR}`.chomp
-        editor = shell_editor == "" ? EDITOR : shell_editor
-        system("#{editor} #{issue.filename}")
+      when "edit"
+        issue = Issue.new dir
+
+        if args.size != 1 or not digits_only(args[0]) or args[0].to_i > issue.count
+          puts "beastie error: please specify a valid identifier.\n\n"
+          help
+          exit 1
+        end
+
+        issue_no = args[0].to_i
+        system("#{editor_cmd} #{issue.id_to_full_filename issue_no}")
 
       when "show"
-        if args.size != 1 or not digits_only(args[0]) or args[0].to_i > Issue.count
+        issue = Issue.new dir
+
+        if args.size != 1 or not digits_only(args[0]) or args[0].to_i > issue.count
           puts "beastie error: please specify an issue.\n"
           help
           exit 1
         end
 
         issue_no = args[0].to_i
-        system("cat #{Issue.filename issue_no}")
+        system("cat #{issue.id_to_full_filename issue_no}")
 
-      when "change"
-        if args.size != 3 or not digits_only(args[0]) or args[0].to_i > Issue.count
+      when "modify", "change"
+        issue = Issue.new dir
+
+        if args.size != 3 or not digits_only(args[0]) or args[0].to_i > issue.count
           puts "beastie error: could not parse command line.\n"
           help
           exit 1
@@ -102,26 +117,30 @@ module Beastie
         issue_no = args[0].to_i
         field = args[1]
         value = args[2]
-        issue = Issue.new
-        issue.load(Issue.filename issue_no)
+
+        issue.load_n issue_no
         issue.change field, value
         issue.save
+        puts "Issue #{issue_no} has now #{field} set to #{value}."
 
       when "close"
-        if args.size != 1 or not digits_only(args[0]) or args[0].to_i > Issue.count
+        issue = Issue.new dir
+
+        if args.size != 1 or not digits_only(args[0]) or args[0].to_i > issue.count
           puts "beastie error: please specify an issue.\n"
           help
           exit 1
         end
 
         issue_no = args[0].to_i
-        issue = Issue.new
-        issue.load(Issue.filename issue_no)
+        issue.load_n issue_no
         issue.change "status", "closed"
         issue.save
+        puts "Issue #{issue_no} is now closed."
         
       when "list"
-        Beastie::Issue.list
+        issue = Issue.new dir
+        issue.list
 
       when "help"
         help
@@ -138,9 +157,13 @@ module Beastie
     private
 
     def self.help
-      puts "beastie <command> [<args>]"
+      puts "beastie [-p <project>] <command> [<args>]"
       puts ""
       puts "A simple command-line bug-tracking system"
+      puts ""
+      puts "Global options:"
+      puts "  -p <project>    (--project) command will operate on directory specified by <project>"
+      puts "  -d <dir>        (--directory) command will operate on directory <dir>"
       puts ""
       puts "Commands:"
       puts "  new             create a new issue in current directory"
@@ -149,14 +172,24 @@ module Beastie
       puts "  edit     N      edit issue with id N (where N is the output of the list command)"
       puts "  show     N      show issue with id N (where N is the output of the list command)"
       puts "  change   N f v  change value of field 'f' to 'v' in id N"
+      puts "  modify   N f v  change value of field 'f' to 'v' in id N"
       puts "  close    N      shortcut for 'change N status closed'"
       puts "  version         print version number"
+      puts ""
+      puts "Project specification file is #{ProjectList::PROJECT_FILE}."
     end
 
     # check if str is composed by digits only
     def self.digits_only str
       str.each_char.map { |x| x >= '0' and x <= '9'}.all?
     end
+
+    # get an editor
+    def editor_cmd
+      shell_editor = `echo ${EDITOR}`.chomp
+      shell_editor == "" ? EDITOR : shell_editor
+    end
+
   end
 
 end

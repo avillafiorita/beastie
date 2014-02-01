@@ -40,11 +40,56 @@ Main commands:
 
 - @beastie help@ := unleashes the real power of @beastie@.
 
-h2. Limitations and Warnings
+h2. Managing Different Projects
 
-Beastie uses the *current directory* for all operations.  While this gives a lot of flexibility and freedom in choosing one's standards, it also requires discipline: so, make sure you select one directory where issues are stored and always invoke @beastie@ from that directory.  
+By default @beastie@ uses the *current directory* when executing a command. While this makes gives a lot of freedom in choosing one's standards, it also require a lot of discipline (you always need to make sure you are in the right directory) and can be inconvenient at times.  
 
-Beastie tries to generate human-readable filenames, following the convention "Jekyll":http://jekyllrb.com has for blog posts.  Selecting issues using filenames, however, is a bit clumsy and to simplify operations @beastie@ assigns a number to each issue, which can be used to reference them.  The number can be seen with the @list@ command and depends upon the order in which issues are parsed.  Thus *the same issue might be assigned a different id over time*, if the order in which files are read changes (e.g., if a new back-dated issue is added by hand).
+For this reason, from version 0.3, @beastie@ supports the following two options to specify the directory to use when executing a command:
+
+* option @-d@ (@--directory@) to specify the destination directory
+* option @-p@ (@--project@) to use a specific project for a directory
+
+*Option @-d@.* Use @-d <dir>@ (or @--directory <dir>@) to specify the directory in which the command is executed.
+
+For instance:
+
+<pre>
+  beastie -d ~/issues show
+</pre>
+
+will show all issues stored in the @~/issue@ directory.
+
+*Option @-p@.* Use @-p <name>@ (or @--project <name>@) to specify the name of a project and @beastie@ will perform the operation on the directory associated to @<name>@ in the @~/.beastie_projects@ file.
+
+Entries in the @.beastie_projects@ file look like:
+
+<pre>
+<name>:
+  dir: <dir>
+<another name>:
+  dir: <another dir>
+</pre>
+
+For instance, if @.beastie_projects@ contains:
+
+<pre>
+  beastie:
+    dir: /Users/guest/beastie_issues
+</pre>
+
+then
+
+<pre>
+  $ beastie -p beastie show
+</pre>
+
+will show all the issues stored in the @/Users/guest/beastie_issues@ directory.
+
+Use only one of @-d@ or @-p@; if you do not, @-d@ has precedence.
+
+h2. Remarks and Warnings
+
+Beastie generates human-readable filenames, following the convention "Jekyll":http://jekyllrb.com has for blog posts.  Selecting issues using filenames, however, is a bit clumsy and to simplify operations @beastie@ assigns a number to each issue, which can be used to reference them.  The number can be seen with the @list@ command and depends upon the order in which issues are listed in the directory.  Thus *the same issue might be assigned a different id over time*, if the order in which files are read changes (e.g., if a new back-dated issue is added by hand).
 
 Beastie does not have a specific workflow for bug statutes.
 
@@ -52,17 +97,33 @@ Beastie does not perform syntax checks when reading data.  This can be changed b
 
 Beastie asks various information about a bug.  Change the @ISSUE_FIELDS@ variable, if you are not happy with the default fieldset.
 
+Beastie does not have fancy sorting and filtering functions.  The unix commands @sort@ and @grep@ can be reasonable work-arounds.  For instance the list of open bugs can be gotten with:
+
+<pre>
+  beastie list | grep open
+</pre>
+
+To sort issues by priority:
+
+<pre>
+  beastie list | grep -v "^ID" | sort -n -k 4
+</pre>
+
+Exceptions apply.
+
 
 h2. Similar solutions
 
 There are different command-line bug tracking systems.  The ones I came across with before re-inventing the wheel include: ditz, "bugs everywhere":http://bugseverywhere.org, "ticgit-Ng":https://github.com/jeffWelling/ticgit, "bugzyrb":https://github.com/rkumar/bugzyrb, "git-issues":https://github.com/duplys/git-issues, "later":https://github.com/qznc/later.
 
-Why did I re-invent the wheel? 
+So... why did I re-invent the wheel? 
 
 # for fun
 # human-readable filenames, so that I can manage issues without using beastie, if I want
 # a "programmable" fieldset (see @lib/beastie/issue.rb@)
-# keeping the solution simple
+# keeping the solution simple (280 lines of ruby code, according to @sloccount@)
+
+Use @beastie@! According to @sloccount@, you using a software which costed $8,033! (... as you might guess, COCOMO does not work well for small systems.)
 
 h2. Author
 

@@ -35,7 +35,8 @@ module Beastie
     #   * "prompt"         is what is asked to the user.  Use an empty string for
     #                      a value which is filled automatically.
     #
-    # input function and default value are evaluated, so that computation can be performed
+    # input function and default value are evaluated, so that computation can
+    # be performed
     #
     # - title, created, and status are compulsory: do not delete them
     #   (gen_filename depends upon title and created; the close
@@ -67,12 +68,18 @@ module Beastie
       "title"    => "%-30s"
     }
 
-    # these keep the actual values
-    attr_reader :issue
-    # the filename, after the issue has been saved or if it has been loaded
+    # the directory where all issues of this instance are stored
+    attr_reader :dir
+
+    # the filename of this issue.
+    # IT IS ALWAYS A BASENAME. @dir is added only when needed (e.g. load)
     attr_reader :filename
 
-    def initialize
+    # the values (a Hash) of this issue
+    attr_reader :issue
+
+    def initialize directory
+      @dir = directory
       @issue = Hash.new
     end
 
@@ -84,40 +91,57 @@ module Beastie
       end
     end
     
-    # load from command line
-    def load filename
-      @filename = filename
-      @issue = YAML.load_file(filename)
+    # initialize all fields with the default values
+    # (and set title to the argument)
+    def set_fields title
+      ISSUE_FIELDS.keys.each do |k|
+        @issue[k] = eval(ISSUE_FIELDS[k][DEFAULT])
+      end
+      @issue['title'] = title
     end
 
     def change field, value
       @issue[field] = value
     end
 
+    # load from command line
+    def load filename
+      @filename = File.basename(filename)
+      @issue = YAML.load_file(File.join(@dir, @filename))
+    end
+
+    # load by issue id
+    # @dir must be set, which is always the case because of
+    #      the constructor
+    def load_n n
+      load id_to_full_filename n
+    end
+
+    def id_to_full_filename n
+      Dir.glob(File.join(@dir, '*.{yml,yaml}'))[n - 1]
+    end
+
+    # return the full filename, if @filename is set 
+    # (load, save, ...)
+    def full_filename
+      File.join(@dir, @filename)
+    end
+
     # save object to file
     def save
       @filename = @filename || gen_filename
-
-      file = File.open(@filename, 'w') { |f|
+      file = File.open(File.join(@dir, @filename), 'w') { |f|
         f.puts @issue.to_yaml
       }
-
-      puts "Issue saved to #{filename}"
     end
 
-    # return the n-th filename
-    def self.filename n
-      Dir.glob('*.{yml,yaml}')[n - 1]
-    end
-
-    # count all issues in current directory
-    # to get the maximum ID
-    def self.count
-      Dir.glob('*.{yml,yaml}').size
+    # count all issues in current directory to get the maximum ID
+    def count
+      Dir.glob(File.join(@dir, '*.{yml,yaml}')).size
     end
 
     # list all issues in current directory
-    def self.list
+    def list
       # print header
       printf "ID  "
       REPORT_FIELDS.keys.each do |key|
@@ -127,7 +151,7 @@ module Beastie
 
       # print issues
       file_no = 0
-      Dir.glob('*.{yml,yaml}') do |file|
+      Dir.glob(File.join(@dir, '*.{yml,yaml}')) do |file|
         data = YAML.load_file(file)
         file_no += 1
 
@@ -137,15 +161,6 @@ module Beastie
         end
         printf "\n"
       end
-    end
-
-    # initialize all fields with the default values
-    # (and set title to the argument)
-    def set_fields title
-      ISSUE_FIELDS.keys.each do |k|
-        @issue[k] = eval(ISSUE_FIELDS[k][DEFAULT])
-      end
-      @issue['title'] = title
     end
 
     private 
@@ -161,13 +176,16 @@ module Beastie
       gets.chomp.to_i
     end
 
-    # return a unique filename for this issue
+    # generate a unique filename for this issue
+    #
+    # (notice that @dir is prepended, to make sure it is unique
+    # in the right directory)
     def gen_filename
       name = @issue["created"].strftime("%Y-%m-%d-") + 
              @issue["title"].gsub(/\W+/, "_") +
              ".yaml"
       n = 1
-      while File.exist?(name)
+      while File.exist?(File.join(@dir, name))
         name = File.basename(name, ".yaml") + "-" + n.to_s + ".yaml"
         n += 1
       end
