@@ -157,26 +157,41 @@ module Beastie
     private
 
     def self.help
-      puts "beastie [-p <project>] <command> [<args>]"
-      puts ""
-      puts "A simple command-line bug-tracking system"
-      puts ""
-      puts "Global options:"
-      puts "  -p <project>    (--project) command will operate on directory specified by <project>"
-      puts "  -d <dir>        (--directory) command will operate on directory <dir>"
-      puts ""
-      puts "Commands:"
-      puts "  new             create a new issue in current directory"
-      puts "  nedit    title  create an issue template and edit it with default editor"
-      puts "  list            list all issues stored in current directory"
-      puts "  edit     N      edit issue with id N (where N is the output of the list command)"
-      puts "  show     N      show issue with id N (where N is the output of the list command)"
-      puts "  change   N f v  change value of field 'f' to 'v' in id N"
-      puts "  modify   N f v  change value of field 'f' to 'v' in id N"
-      puts "  close    N      shortcut for 'change N status closed'"
-      puts "  version         print version number"
-      puts ""
-      puts "Project specification file is #{ProjectList::PROJECT_FILE}."
+      puts <<-eos
+beastie [-p <project> | -d <dir>] <command> [<args>]
+
+A simple command-line bug-tracking system
+
+Global options:
+  -p <project>  (--project) command will operate on <project> (*)
+  -d <dir>      (--directory) command will operate on directory <dir>
+
+Commands:
+  new             create a new issue in current directory
+  nedit    title  create an issue template and edit it with default editor
+  list            list all issues stored in current directory
+  edit     N      edit issue with id N (where N is the output of the list command)
+  show     N      show issue with id N (where N is the output of the list command)
+  change   N f v  change value of field 'f' to 'v' in id N
+  modify   N f v  change value of field 'f' to 'v' in id N
+  close    N      shortcut for 'change N status closed'
+  version         print version number
+
+(*) To use this option, create a file #{ProjectList::PROJECT_FILE} containing
+entries in the form:
+
+<project1>:
+  dir: <dir1>
+<project2>:
+  dir: <dir2>
+
+For instance:
+
+beastie:
+  dir: /Users/guest/beastie
+
+(in which case -p beastie is equivalent to -d /Users/guest/beastie)
+eos
     end
 
     # check if str is composed by digits only
