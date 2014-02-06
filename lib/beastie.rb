@@ -185,7 +185,7 @@ module Beastie
     end
 
     # get an editor
-    def editor_cmd
+    def self.editor_cmd
       shell_editor = `echo ${EDITOR}`.chomp
       shell_editor == "" ? EDITOR : shell_editor
     end
