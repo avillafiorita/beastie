@@ -14,6 +14,17 @@ module Beastie
       end
     end
 
+    # an overkill ... system("cat #{PROJECT_FILE}") could work equally well
+    def self.to_s
+      output = ""
+      projects = self.read
+      projects.keys.each do |key|
+        output << "#{key}:\n"
+        output << "  dir: #{projects[key]["dir"]}\n"
+      end
+      output
+    end
+
     private
     
     def self.read

@@ -153,6 +153,16 @@ Mercenary.program(:beastie) do |p|
     end
   end
 
+  p.command(:projects) do |c|
+    c.syntax "projects"
+    c.alias "list_projects"
+    c.description "list currently defined projects"
+
+    c.action do |_,_|
+      puts Beastie::ProjectList.to_s
+    end
+  end
+
   p.command(:version) do |c|
     c.syntax "version"
     c.description "print version number (equivalent to beastie -v)"
