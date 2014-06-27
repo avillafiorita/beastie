@@ -1,6 +1,218 @@
 #!/usr/bin/env ruby
- 
+
+require 'mercenary'
 require_relative '../lib/beastie'
 
-Beastie::Runner.run(ARGV)
+Mercenary.program(:beastie) do |p|
+  EDITOR = "emacsclient"
+
+  p.version Beastie::VERSION
+  p.description 'A simple command-line bug-tracking system'
+  p.syntax "beastie <subcommand> [options] [arguments]"
+
+  p.option 'directory', '--directory DIR', '-d DIR', 'operate on DIR'
+  p.option 'project', '--project PRJ', '-p PRJ', 'operate on project PRJ'
+
+  p.command(:new) do |c|
+    c.syntax "new"
+    c.description "create a new issue"
+
+    c.action do |args, options|
+      if args.size != 0
+        puts "beastie error: too many arguments.\n"
+        puts p.to_s
+        exit 1
+      end
+
+      dir = dest_dir options
+      issue = Beastie::Issue.new dir
+      issue.ask
+      issue.save
+      puts "Issue saved to #{issue.full_filename}."
+    end
+  end
+
+  p.command(:nedit) do |c|
+    c.syntax("nedit title")
+    c.description("create an issue template and edit it with default editorc.")
+
+    c.action do |args, options|
+      title = args.join(" ") # get all arguments (so that no " are necessary)
+
+      if title == ""
+        puts "beastie error: please specify the title of the issue.\n"
+        puts p.to_s
+        exit 1
+      end
+
+      dir = dest_dir options
+      issue = Beastie::Issue.new dir
+      issue.set_fields title
+      issue.save
+      system("#{editor_cmd} #{issue.full_filename}")
+    end
+  end
+
+  p.command(:edit) do |c|
+    c.syntax "edit N"
+    c.description ""
+
+    c.action do |args, options|
+      dir = dest_dir options
+      issue = Beastie::Issue.new dir
+
+      if args.size != 1 or not digits_only(args[0]) or args[0].to_i > issue.count
+        puts "beastie error: please specify a valid identifier.\n\n"
+        puts p.to_s
+        exit 1
+      end
+
+      issue_no = args[0].to_i
+      system("#{editor_cmd} #{issue.id_to_full_filename issue_no}")
+    end
+  end
+
+  p.command(:list) do |c|
+    c.syntax "list"
+    c.description "list all issues"
+
+    c.action do |_, options|
+      dir = dest_dir options
+      issue = Beastie::Issue.new dir
+      issue.list
+    end
+  end
+
+  p.command(:show) do |c|
+    c.syntax "show N"
+    c.description "show issue with id N (where N is the output of the list command)"
+
+    c.action do |args, options|
+      dir = dest_dir options
+      issue = Beastie::Issue.new dir
+
+      if args.size != 1 or not digits_only(args[0]) or args[0].to_i > issue.count
+        puts "beastie error: please specify an issue.\n"
+        puts p.to_s
+        exit 1
+      end
+
+      issue_no = args[0].to_i
+      system("cat #{issue.id_to_full_filename issue_no}")
+    end
+  end
+  
+  p.command(:change) do |c|
+    c.syntax "change N f v"
+    c.description "change value of field 'f' to 'v' in id N"
+    c.alias "modify"
+
+    c.action do |args, options|
+      dir = dest_dir options
+      issue = Beastie::Issue.new dir
+
+      if args.size != 3 or not digits_only(args[0]) or args[0].to_i > issue.count
+        puts "beastie error: could not parse command line.\n"
+        puts p.to_s
+        exit 1
+      end
+
+      issue_no = args[0].to_i
+      field = args[1]
+      value = args[2]
+
+      issue.load_n issue_no
+      issue.change field, value
+      issue.save
+      puts "Issue #{issue_no} has now #{field} set to #{value}."
+    end
+  end
+
+  p.command(:close) do |c|
+    c.syntax "close N"
+    c.description "shortcut for 'change N status closed'"
+
+    c.action do |args, options|
+      dir = dest_dir options
+      issue = Beastie::Issue.new dir
+
+      if args.size != 1 or not digits_only(args[0]) or args[0].to_i > issue.count
+        puts "beastie error: please specify an issue.\n"
+        puts p.to_s
+        exit 1
+      end
+
+      issue_no = args[0].to_i
+      issue.load_n issue_no
+      issue.change "status", "closed"
+      issue.save
+      puts "Issue #{issue_no} is now closed."
+    end
+  end
+
+  p.command(:version) do |c|
+    c.syntax "version"
+    c.description "print version number"
+
+    c.action do |_,_|
+      puts "This is beastie version #{Beastie::VERSION}"
+    end
+  end
+
+  p.command(:help) do |c|
+    c.syntax "help"
+    c.description "print command usage information"
+
+    c.action do |_,_|
+      puts p.to_s
+    end
+  end
+
+  p.default_command(:help)
+
+  private
+
+  # define the directory in which we will operate
+  def self.dest_dir options
+    if options["project"] then
+      dir = Beastie::ProjectList.project_dir options["project"]
+
+      if dir == nil then
+        name = options["project"]
+        puts "beastie error: nothing known about project #{name}.\n"
+        puts ""
+        puts "add the following lines to #{Beastie::ProjectList::PROJECT_FILE}"
+        puts ""
+        puts "#{name}:"
+        puts "  dir: <directory where #{name} issues live>"
+        exit 1
+      end
+    elsif options["directory"] then
+      dir = options["directory"]
+    else
+      dir = "."
+    end
+
+    if not Dir.exists?(dir)
+      puts "beastie error: the directory does not exist"
+      puts ""
+      puts "if you used -p, please check the #{Beastie::ProjectList::PROJECT_FILE} file"
+      exit 1
+    end
+
+    dir
+  end
+
+  # check if str is composed by digits only
+  def self.digits_only str
+    str.each_char.map { |x| x >= '0' and x <= '9'}.all?
+  end
+
+  # get an editor
+  def self.editor_cmd
+    shell_editor = `echo ${EDITOR}`.chomp
+    shell_editor == "" ? EDITOR : shell_editor
+  end
+
+end  
 

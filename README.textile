@@ -54,7 +54,7 @@ For this reason, from version 0.3, @beastie@ supports the following two options 
 For instance:
 
 <pre>
-  beastie -d ~/issues show
+  beastie show -d ~/issues
 </pre>
 
 will show all issues stored in the @~/issue@ directory.
@@ -80,7 +80,7 @@ For instance, if @.beastie_projects@ contains:
 then
 
 <pre>
-  $ beastie -p beastie show
+  $ beastie show -p beastie
 </pre>
 
 will show all the issues stored in the @/Users/guest/beastie_issues@ directory.
