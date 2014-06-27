@@ -34,7 +34,7 @@ Mercenary.program(:beastie) do |p|
 
   p.command(:nedit) do |c|
     c.syntax("nedit title")
-    c.description("create an issue template and edit it with default editorc.")
+    c.description("create an issue template and edit it with default editor.")
 
     c.action do |args, options|
       title = args.join(" ") # get all arguments (so that no " are necessary)
@@ -55,7 +55,7 @@ Mercenary.program(:beastie) do |p|
 
   p.command(:edit) do |c|
     c.syntax "edit N"
-    c.description ""
+    c.description "edit issue number N (where N is the output of the list command)"
 
     c.action do |args, options|
       dir = dest_dir options
@@ -76,10 +76,13 @@ Mercenary.program(:beastie) do |p|
     c.syntax "list"
     c.description "list all issues"
 
+    c.option "where", "-w COND", "--where COND", "filter according to condition"
+
     c.action do |_, options|
       dir = dest_dir options
+
       issue = Beastie::Issue.new dir
-      issue.list
+      issue.list options["where"] || "true" # it is a string because we eval the argument
     end
   end
 
@@ -104,7 +107,7 @@ Mercenary.program(:beastie) do |p|
   
   p.command(:change) do |c|
     c.syntax "change N f v"
-    c.description "change value of field 'f' to 'v' in id N"
+    c.description "change value of field 'f' to 'v' in issue N"
     c.alias "modify"
 
     c.action do |args, options|
@@ -152,7 +155,7 @@ Mercenary.program(:beastie) do |p|
 
   p.command(:version) do |c|
     c.syntax "version"
-    c.description "print version number"
+    c.description "print version number (equivalent to beastie -v)"
 
     c.action do |_,_|
       puts "This is beastie version #{Beastie::VERSION}"
@@ -161,7 +164,7 @@ Mercenary.program(:beastie) do |p|
 
   p.command(:help) do |c|
     c.syntax "help"
-    c.description "print command usage information"
+    c.description "print command usage information (equivalent to beastie -h)"
 
     c.action do |_,_|
       puts p.to_s

@@ -141,7 +141,7 @@ module Beastie
     end
 
     # list all issues in current directory
-    def list
+    def list condition
       # print header
       printf "ID  "
       REPORT_FIELDS.keys.each do |key|
@@ -155,11 +155,28 @@ module Beastie
         data = YAML.load_file(file)
         file_no += 1
 
-        printf "%3d ", file_no
+        # create a string with all the bindings
+        assignments = ""
         REPORT_FIELDS.keys.each do |key|
-          printf REPORT_FIELDS[key] + " ", data[key]
+          # not sure why, but using classes does not work..
+          # so I make them into strings
+          case data[key].class.to_s
+          when "Fixnum"
+            assignments << "#{key} = #{data[key]};"
+          when "String"
+            assignments << "#{key} = '#{data[key]}';"
+          when "Date"
+            assignments << "#{key} = Date.parse('#{data[key]}');"
+          end
         end
-        printf "\n"
+
+        if eval (assignments + condition) then
+          printf "%3d ", file_no
+          REPORT_FIELDS.keys.each do |key|
+            printf REPORT_FIELDS[key] + " ", data[key]
+          end
+          printf "\n"
+        end
       end
     end
 

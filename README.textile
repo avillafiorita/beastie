@@ -87,6 +87,26 @@ will show all the issues stored in the @/Users/guest/beastie_issues@ directory.
 
 Use only one of @-d@ or @-p@; if you do not, @-d@ has precedence.
 
+h2. Filtering
+
+Beastie has support for filtering data, using the @--where@ option.  The option takes as argument an expression (written in Ruby), defining what issues have to be printed.
+
+For instance:
+
+<pre>
+  beastie list --where "status == 'open'"
+</pre>
+
+will show only the @open@ issues.  More complex expressions can be defined, using Boolean operators:
+
+<pre>
+  beastie list --where "status == 'open' and priority >= 4"
+</pre>
+
+will show open issues with priority greater or equal to 4.
+
+Notice that the expression passes as argument to @--where@ is evaluated in Ruby, so any Ruby expression will work.
+
 h2. Remarks and Warnings
 
 Beastie generates human-readable filenames, following the convention "Jekyll":http://jekyllrb.com has for blog posts.  Selecting issues using filenames, however, is a bit clumsy and to simplify operations @beastie@ assigns a number to each issue, which can be used to reference them.  The number can be seen with the @list@ command and depends upon the order in which issues are listed in the directory.  Thus *the same issue might be assigned a different id over time*, if the order in which files are read changes (e.g., if a new back-dated issue is added by hand).
@@ -97,19 +117,11 @@ Beastie does not perform syntax checks when reading data.  This can be changed b
 
 Beastie asks various information about a bug.  Change the @ISSUE_FIELDS@ variable, if you are not happy with the default fieldset.
 
-Beastie does not have fancy sorting and filtering functions.  The unix commands @sort@ and @grep@ can be reasonable work-arounds.  For instance the list of open bugs can be gotten with:
-
-<pre>
-  beastie list | grep open
-</pre>
-
-To sort issues by priority:
+Sorting its on the way (but not yet implemented).  Use the power of Unix for that.  For instance:
 
 <pre>
   beastie list | grep -v "^ID" | sort -n -k 4
 </pre>
-
-Exceptions apply.
 
 
 h2. Similar solutions
@@ -123,11 +135,11 @@ So... why did I re-invent the wheel?
 # a "programmable" fieldset (see @lib/beastie/issue.rb@)
 # keeping the solution simple (280 lines of ruby code, according to @sloccount@)
 
-Use @beastie@! According to @sloccount@, you using a software which costed $8,033! (... as you might guess, COCOMO does not work well for small systems.)
+Use @beastie@!  According to @sloccount@, you will be using, for free, a software which costed $4,490 to produce! (This is less than the cost of v 0.3, which was estimated at $8,000.  Jekyll mercenary, in fact, lowered the number of lines of code and the costs estimated with COCOMO.)
 
 h2. Author
 
-Adolfo Villafiorita
+"Adolfo Villafiorita":http://ict4g.org/home/profile/Adolfo_Villafiorita.html
 
 h2. License
 
