@@ -16,6 +16,7 @@ Mercenary.program(:beastie) do |p|
   p.command(:new) do |c|
     c.syntax "new"
     c.description "create a new issue"
+    c.alias "add"
 
     c.action do |args, options|
       if args.size != 0
