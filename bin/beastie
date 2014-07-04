@@ -78,12 +78,20 @@ Mercenary.program(:beastie) do |p|
     c.description "list all issues"
 
     c.option "where", "-w COND", "--where COND", "filter according to condition"
+    c.option "open", "-s STATUS", "--status STATUS", "list only issues of a given status"
+    c.option "type", "-t TYPE", "--type TYPE", "list only issues of a given type"
 
     c.action do |_, options|
       dir = dest_dir options
 
       issue = Beastie::Issue.new dir
-      issue.list options["where"] || "true" # it is a string because we eval the argument
+
+      filter = "true" # it is a string because it is eval-uated
+      filter += " and status == '#{options["open"]}'" if options["open"] 
+      filter += " and type == '#{options["type"]}'" if options["type"]
+      filter += " and #{options["where"]}" if options["where"]
+      
+      issue.list filter
     end
   end
 
