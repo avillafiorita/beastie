@@ -16,7 +16,7 @@ Mercenary.program(:beastie) do |p|
   p.command(:new) do |c|
     c.syntax "new"
     c.description "create a new issue"
-    c.alias "add"
+    c.alias :add
 
     c.action do |args, options|
       if args.size != 0
@@ -109,7 +109,7 @@ Mercenary.program(:beastie) do |p|
   p.command(:change) do |c|
     c.syntax "change N f v"
     c.description "change value of field 'f' to 'v' in issue N"
-    c.alias "modify"
+    c.alias :modify
 
     c.action do |args, options|
       dir = dest_dir options
@@ -156,7 +156,7 @@ Mercenary.program(:beastie) do |p|
 
   p.command(:projects) do |c|
     c.syntax "projects"
-    c.alias "list_projects"
+    c.alias :list_projects
     c.description "list currently defined projects"
 
     c.action do |_,_|
