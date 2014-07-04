@@ -1,6 +1,7 @@
 require 'date'
 require 'tempfile'
 require 'yaml'
+require 'readline'
 
 module Beastie
   class Issue
@@ -47,14 +48,14 @@ module Beastie
     PROMPT=2
 
     ISSUE_FIELDS = {
-      "title"       => ["gets.chomp",  "'title'",    "Short description of the issue"], 
+      "title"       => ["Readline.readline",  "'title'",    "Short description of the issue"], 
       "status"      => ["",            "'open'",     ""],
       "created"     => ["",            "Date.today", ""],
-      "component"   => ["gets.chomp",  "''",         "Component affected by the issue"],
+      "component"   => ["Readline.readline",  "''",         "Component affected by the issue"],
       "priority"    => ["get_int",     "3",          "Priority (an integer number, e.g., from 1 to 5)"],
       "severity"    => ["get_int",     "3",          "Severity (an integer number, e.g., from 1 to 5)"],
       "points"      => ["get_int",     "5",          "Points (an integer estimating difficulty of fix)"],
-      "type"        => ["gets.chomp",  "'bug'",      "Type (e.g., story, task, bug, refactoring)"],
+      "type"        => ["Readline.readline",  "'bug'",      "Type (e.g., story, task, bug, refactoring)"],
       "description" => ["get_lines",   "''",         "Longer description (terminate with '.')"]
     }
 
@@ -184,13 +185,18 @@ module Beastie
    
     # read n-lines (terminated by a ".")
     def get_lines
-      $/ = "\n.\n"  
-      STDIN.gets.chomp("\n.\n")
+      lines = []
+      line = ""
+      until line == "."
+        line = Readline.readline
+        lines << line
+      end
+      lines.join("\n")
     end
     
     # read an integer
     def get_int
-      gets.chomp.to_i
+      Readline.readline.to_i
     end
 
     # generate a unique filename for this issue
