@@ -107,6 +107,18 @@ will show open issues with priority greater or equal to 4.
 
 Notice that the expression passes as argument to @--where@ is evaluated in Ruby, so any Ruby expression will work.
 
+Since, after the initial excitement, typing @--where "status == 'open'"@ becomes quite boring, the following shortcuts are available:
+
+* @--status STATUS@, to select by status
+* @--type TYPE@, to select by type
+
+the options are put in and.  So, for instance:
+
+    beastie --status open --type bug --where "priority > 3"
+
+will select the open issues, with type bug and priority greater than 3.
+
+
 h2. Remarks and Warnings
 
 Beastie generates human-readable filenames, following the convention "Jekyll":http://jekyllrb.com has for blog posts.  Selecting issues using filenames, however, is a bit clumsy and to simplify operations @beastie@ assigns a number to each issue, which can be used to reference them.  The number can be seen with the @list@ command and depends upon the order in which issues are listed in the directory.  Thus *the same issue might be assigned a different id over time*, if the order in which files are read changes (e.g., if a new back-dated issue is added by hand).
